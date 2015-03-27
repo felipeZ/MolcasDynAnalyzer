@@ -28,7 +28,11 @@ type PID = String
 
 -- |executes a list of IO action in such a way that  N actions are run concurrentely. 
 -- |This function spawns an async process that execute an IO action.
-processFiles ::  Int -> [FilePath] -> (FilePath -> IO ()) -> (FilePath -> IO ()) -> IO ()
+processFiles ::  Int ->   -- | number of concurrent jobs 
+                 [FilePath] -> -- | Files to process
+                 (FilePath -> IO ()) -> -- | action to carry out with the file
+                 (FilePath -> IO ()) -> -- | action in case of failure
+                 IO ()
 processFiles n fs  action handle = do
                  tbQ  <- atomically $ newTBQueue n
                  loop fs tbQ
@@ -50,10 +54,7 @@ processFiles n fs  action handle = do
                 Left e    -> handle file 
                 Right _   -> return ()
 
--- | Writes a new Main.hs containing the desired computations, that is copy to the cluster node
--- | together with all the modules that main depends on and then it is executed remotely 
--- | with "runhaskell Main.hs [opts]". Then the async process should ask periodically to 
--- | the job scheduling system (using threadDelay) if the job is done.
+-- | Run the script that launch the parser on the cluster and wait for it
 launchProcess :: String -> FilePath -> IO ()
 launchProcess arg file = do
          writeScript  "runParser.sh" arg   
@@ -101,5 +102,3 @@ processout  path = do
    zipWithM_ writeFile files ess 
 
 
-clusterHeader :: String 
-clusterHeader = undefined
