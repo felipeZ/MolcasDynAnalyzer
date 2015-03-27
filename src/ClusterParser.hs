@@ -1,5 +1,4 @@
 
-
 module Main where
 
 import Data.List (isSuffixOf)
@@ -12,5 +11,10 @@ main = do
    let bond = readT tup   
    if isSuffixOf ".out" file  
       then processout file 
-      else isSuffixOf ".xyz" file then processxyz bond file 
-                                  else error "Unknown FilePath"
+      else if isSuffixOf ".xyz" file 
+              then processxyz file bond 
+              else error "Unknown FilePath"
+
+
+readT :: String -> (Int,Int)
+readT = read 

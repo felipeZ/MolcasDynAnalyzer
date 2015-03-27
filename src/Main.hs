@@ -16,16 +16,14 @@ import Types
 -- =======> <============
 
 main = do
-  args <- getArgs
+  args@[n,rootDir,tuple] <- getArgs
   if (length args) /= 2 then print msg1
                         else do
-                            let tuple   = readTInt (args !! 0)
-                                rootDir = args !! 1
+                            let njobs = read n
                             xyzFiles <- getRecursiveContents "xyz" rootDir
                             outFiles <- getRecursiveContents "out" rootDir
-                            compileCode "ProcessFile" tuple 
-                            processFiles xyzFiles (processxyz tuple handle
-                            processFiles outFiles processout handle
+                            processFiles njobs xyzFiles (launchProcess tuple) handle
+                            processFiles njobs outFiles (launchProcess tuple) handle
   
   
 msg1 :: String

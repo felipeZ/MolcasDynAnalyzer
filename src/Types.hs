@@ -10,7 +10,7 @@ type Vec3D = [Double]
 
 type MolCoord = [Vec3D]
 
-data Action = XYZ String | OUT deriving show
+data Action = XYZ String | OUT deriving Show
 
 data MolcasException = XYZException | OutException deriving (Show,Typeable)
 
