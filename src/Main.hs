@@ -21,7 +21,7 @@ main = do
                         else do
                             let [n,rootDir,tuple] = args
                                 njobs = read n
-                            xyzFiles <- getRecursiveContents "xyz" rootDir
+                            xyzFiles <- getRecursiveContents "md.xyz" rootDir
                             outFiles <- getRecursiveContents "out" rootDir
                             processFiles njobs xyzFiles (launchLocalProcess tuple) handle
                             processFiles njobs outFiles (launchLocalProcess tuple) handle

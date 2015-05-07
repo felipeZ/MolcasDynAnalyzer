@@ -74,7 +74,7 @@ processxyz path (a1,a2) = do
                let bonds    = parMap rseq (calculateBond a1 a2) xyz
                    rs       = concatMap (printf "%10.5f\n") bonds
                    (dir,_)  =  splitFileName path
-                   fileOut  = printf "%sbonds.out" dir 
+                   fileOut  = printf "%sbonds.txt" dir 
                writeFile fileOut rs
 
 processout :: FilePath -> IO ()
@@ -82,9 +82,7 @@ processout  path = do
    out <- parseMolcasOutput path
    let (dir,_) =  splitFileName path
        ess     = map (concatMap (printf "%10.5f\n")) out
-       files   = map (printf "%senergies%.out" path) ["S0","S1","S2","S3"]
+       files   = map (printf "%senergies%s.txt" dir) ["S0","S1","S2","S3"]
    zipWithM_ writeFile files ess 
 
 
-clusterHeader :: String 
-clusterHeader = undefined
