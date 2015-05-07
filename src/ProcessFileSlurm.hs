@@ -1,5 +1,5 @@
 
-module ProcessFile where
+module ProcessFileSlurm where
 
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async
@@ -8,7 +8,7 @@ import Control.Exception
 import Control.Monad
 import Control.Parallel.Strategies (Strategy,parList,parMap,rdeepseq,rseq,using)
 import Data.Char (isSpace)
-import Data.List (dropWhile,isSuffixOf)
+import Data.List (dropWhile)
 import System.FilePath.Posix (splitFileName)
 import System.Process (readProcess)
 import Text.Printf 
@@ -54,17 +54,32 @@ processFiles n fs  action handle = do
 -- | together with all the modules that main depends on and then it is executed remotely 
 -- | with "runhaskell Main.hs [opts]". Then the async process should ask periodically to 
 -- | the job scheduling system (using threadDelay) if the job is done.
-launchLocalProcess :: String -> FilePath -> IO ()
-launchLocalProcess arg file = do
-   let bond = readT arg
-   if isSuffixOf ".out" file  
-      then processout file 
-      else if isSuffixOf ".xyz" file 
-              then processxyz file bond 
-              else error "Unknown FilePath"
+launchProcess :: String -> FilePath -> IO ()
+launchProcess arg file = do
+         writeScript  "runParser.sh" arg   
+         pid <- submitScript "sbatch" ["runParser.sh"]
+         waitCluster pid   
 
-readT :: String -> (Int,Int)
-readT = read 
+writeScript :: FilePath  -> String -> IO ()
+writeScript file arg =  writeFile "runParser.sh" content
+ 
+ where content = printf "%ssbatch clusterParser %s %s\n" header file arg
+       header = "#! /bin/bash -l\n#SBATCH -A snic2015-6-12\n#SBATCH -p core \n#SBATCH -t 00:30:00 \n#SBATCH -J AnalyzeDyn\n#SBATCH -N 1 --cpus-per-task 2\n\n"
+
+
+submitScript :: FilePath -> [String] -> IO PID
+submitScript file opts =  (readProcess file opts []) >>= return . getPID 
+ where getPID = read . last . words
+
+waitCluster :: PID -> IO ()
+waitCluster pid = do 
+    st <- fmap getStatus $ readProcess "squeue" ["j",pid,"--format=\"%.2t\""] [] 
+    delay
+    if st `elem` ["R","PD"] then delay >> waitCluster pid 
+                            else return ()    
+  
+ where getStatus = dropWhile isSpace . last . lines . filter ( /= '\"')
+       delay = threadDelay (30 * 1000000) 
                             
 -- | Calculate the bond distance using the supply atom numbers and the 
 -- | cartesian coordinates

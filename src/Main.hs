@@ -22,8 +22,22 @@ main = do
                             let njobs = read n
                             xyzFiles <- getRecursiveContents "xyz" rootDir
                             outFiles <- getRecursiveContents "out" rootDir
-                            processFiles njobs xyzFiles (launchProcess tuple) handle
-                            processFiles njobs outFiles (launchProcess tuple) handle
+                            processFiles njobs xyzFiles (launchLocalProcess tuple) handle
+                            processFiles njobs outFiles (launchLocalProcess tuple) handle
+
+
+
+-- mainCluster = do
+--   args@[n,rootDir,tuple] <- getArgs
+--   if (length args) /= 2 then print msg1
+--                         else do
+--                             let njobs = read n
+--                             xyzFiles <- getRecursiveContents "xyz" rootDir
+--                             outFiles <- getRecursiveContents "out" rootDir
+--                             processFiles njobs xyzFiles (launchProcess tuple) handle
+--                             processFiles njobs outFiles (launchProcess tuple) handle
+
+
   
   
 msg1 :: String
