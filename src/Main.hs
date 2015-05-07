@@ -16,15 +16,15 @@ import Types
 -- =======> <============
 
 main = do
-  args@[n,rootDir,tuple] <- getArgs
-  if (length args) /= 2 then print msg1
+  args <- getArgs
+  if (length args) /= 3 then print msg1
                         else do
-                            let njobs = read n
+                            let [n,rootDir,tuple] = args
+                                njobs = read n
                             xyzFiles <- getRecursiveContents "xyz" rootDir
                             outFiles <- getRecursiveContents "out" rootDir
                             processFiles njobs xyzFiles (launchLocalProcess tuple) handle
                             processFiles njobs outFiles (launchLocalProcess tuple) handle
-
 
 
 -- mainCluster = do
@@ -41,7 +41,7 @@ main = do
   
   
 msg1 :: String
-msg1 = "the program required the number of the atoms involved in the bond (a1,a2) together with the path to the directory where the output files are store"
+msg1 = "the program required the number of the simulataneous jobs to be run in parallel, the path to the directory where the output files are store the atoms involved in the bond (a1,a2) together" 
 
 handle :: FilePath -> IO ()
 handle = printf "File %s could not being parse\n" 
