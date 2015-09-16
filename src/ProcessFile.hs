@@ -15,9 +15,8 @@ import Text.Printf
 
 -- ==================> Internal Modules <======================
 
-import Molcas 
 import NumericalFunctions 
-import ParserXYZ
+import ParseMolcas
 import Types
 
 -- =====================><=========================
@@ -50,39 +49,22 @@ processFiles n fs  action handle = do
                 Left e    -> handle file 
                 Right _   -> return ()
 
--- | Writes a new Main.hs containing the desired computations, that is copy to the cluster node
--- | together with all the modules that main depends on and then it is executed remotely 
--- | with "runhaskell Main.hs [opts]". Then the async process should ask periodically to 
--- | the job scheduling system (using threadDelay) if the job is done.
-launchLocalProcess :: String -> FilePath -> IO ()
-launchLocalProcess arg file = do
-   let bond = readT arg
-   if isSuffixOf ".out" file  
-      then processout file 
-      else if isSuffixOf ".xyz" file 
-              then processxyz file bond 
-              else error "Unknown FilePath"
-
-readT :: String -> (Int,Int)
-readT = read 
-                            
--- | Calculate the bond distance using the supply atom numbers and the 
--- | cartesian coordinates
-processxyz :: FilePath -> (Int,Int) -> IO ()
-processxyz path (a1,a2) = do 
-               xyz <- parseXYZFile path 
-               let bonds    = parMap rseq (calculateBond a1 a2) xyz
-                   rs       = concatMap (printf "%10.5f\n") bonds
-                   (dir,_)  =  splitFileName path
-                   fileOut  = printf "%sbonds.txt" dir 
-               writeFile fileOut rs
-
-processout :: FilePath -> IO ()
-processout  path = do 
-   out <- parseMolcasOutput path
-   let (dir,_) =  splitFileName path
-       ess     = map (concatMap (printf "%10.5f\n")) out
-       files   = map (printf "%senergies%s.txt" dir) ["S0","S1","S2","S3"]
+-- | Calculates the bond distance using the supply atom numbers and the 
+--  cartesian coordinates. Then prints those values together with the
+--  energies of the first 4 roots  
+processout :: String -> FilePath -> IO ()
+processout t path = do 
+   (xss,energies) <- parseMolcasOutput path
+   let (a1,a2)   = readT t
+       bonds     = parMap rseq (calculateBond a1 a2) xss
+       rs        = concatMap (printf "%10.5f\n") bonds
+       (dir,_)   =  splitFileName path
+       ess       = map (concatMap (printf "%10.5f\n")) energies
+       files     = map (printf "%senergies%s.txt" dir) ["S0","S1","S2","S3"]
+       fileBonds = printf "%sbonds.txt" dir
+   writeFile fileBonds rs       
    zipWithM_ writeFile files ess 
 
 
+readT :: String -> (Int,Int)
+readT = read

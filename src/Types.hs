@@ -5,8 +5,11 @@ module Types where
 import Control.Exception 
 import Data.Typeable
 
+
 -- =============> <====================
 type Vec3D = [Double]
+
+type Energies = Vec3D
 
 type MolCoord = [Vec3D]
 
